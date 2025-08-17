@@ -6,25 +6,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Eye, MessageSquare, MoreHorizontal, Search } from "lucide-react";
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Eye,
+  MessageSquare,
+  MoreHorizontal,
+  Search,
+  Plus,
+  Settings,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 
 interface Booking {
   id: string;
@@ -36,6 +43,26 @@ interface Booking {
   amount: number;
   guests: number;
   property: string;
+}
+
+interface Platform {
+  id: string;
+  name: string;
+  logo: string;
+  status: "connected" | "disconnected" | "error";
+  lastSync: string;
+  autoSync: boolean;
+}
+
+interface Listing {
+  id: string;
+  name: string;
+  platformId: string;
+  status: "Currently Hosting" | "Available";
+  guestName: string | null;
+  dateRange: string;
+  rate: number;
+  currency: string;
 }
 
 const mockBookings: Booking[] = [
@@ -113,8 +140,107 @@ const BookingTable = () => {
   const [bookings, setBookings] = useState<Booking[]>(mockBookings);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
-  const formatDate = (dateString: string) => {
+  const [platforms] = useState<Platform[]>([
+    {
+      id: "1",
+      name: "Airbnb",
+      logo: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&q=80",
+      status: "connected",
+      lastSync: "2023-05-15T10:30:00",
+      autoSync: true,
+    },
+    {
+      id: "2",
+      name: "Trip.com",
+      logo: "https://images.unsplash.com/photo-1619468129361-605ebea04b44?w=100&q=80",
+      status: "connected",
+      lastSync: "2023-05-14T14:45:00",
+      autoSync: true,
+    },
+    {
+      id: "3",
+      name: "Booking.com",
+      logo: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=100&q=80",
+      status: "error",
+      lastSync: "2023-05-10T09:15:00",
+      autoSync: false,
+    },
+    {
+      id: "4",
+      name: "Agoda",
+      logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=100&q=80",
+      status: "disconnected",
+      lastSync: "2023-05-01T16:20:00",
+      autoSync: false,
+    },
+  ]);
+
+  const [listings] = useState<Listing[]>([
+    {
+      id: "1",
+      name: "Cozy home in Eastwood",
+      platformId: "1",
+      status: "Currently Hosting",
+      guestName: "John Smith",
+      dateRange: "May 15 - May 20, 2023",
+      rate: 120,
+      currency: "USD",
+    },
+    {
+      id: "2",
+      name: "Muji home in Eastwood",
+      platformId: "1",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Jun 1, 2023",
+      rate: 95,
+      currency: "USD",
+    },
+    {
+      id: "3",
+      name: "Modern Apartment Downtown",
+      platformId: "2",
+      status: "Currently Hosting",
+      guestName: "Sarah Johnson",
+      dateRange: "May 10 - May 25, 2023",
+      rate: 150,
+      currency: "USD",
+    },
+    {
+      id: "4",
+      name: "Luxury Villa by the Beach",
+      platformId: "3",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Jul 15, 2023",
+      rate: 300,
+      currency: "USD",
+    },
+    {
+      id: "5",
+      name: "Studio in Arts District",
+      platformId: "4",
+      status: "Currently Hosting",
+      guestName: "Mike Chen",
+      dateRange: "May 8 - May 22, 2023",
+      rate: 80,
+      currency: "USD",
+    },
+    {
+      id: "6",
+      name: "Garden View Apartment",
+      platformId: "1",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Aug 10, 2023",
+      rate: 110,
+      currency: "USD",
+    },
+  ]);
+
+  const formatBookingDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -152,100 +278,156 @@ const BookingTable = () => {
     return <Badge className={colorClass}>{platform}</Badge>;
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "connected":
+        return "bg-green-100 text-green-800";
+      case "disconnected":
+        return "bg-gray-100 text-gray-800";
+      case "error":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getListingStatusColor = (status: string) => {
+    switch (status) {
+      case "Currently Hosting":
+        return "bg-blue-100 text-blue-800";
+      case "Available":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getFilteredListings = () => {
+    if (!selectedPlatform) return listings;
+    return listings.filter(
+      (listing) => listing.platformId === selectedPlatform,
+    );
+  };
+
+  const getSelectedPlatformName = () => {
+    const platform = platforms.find((p) => p.id === selectedPlatform);
+    return platform ? platform.name : "All Platforms";
+  };
+
+  const formatSyncDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
   return (
-    <Card className="w-full bg-white">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Booking Management</CardTitle>
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search by guest or property..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="space-y-6">
+      <Card className="w-full bg-white">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            Booking Management
+          </CardTitle>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search by guest or property..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bookings</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="inquiry">Inquiries</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Bookings</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="inquiry">Inquiries</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Check-in</TableHead>
-                <TableHead>Check-out</TableHead>
-                <TableHead>Platform</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBookings.length > 0 ? (
-                filteredBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">
-                      {booking.guestName}
-                    </TableCell>
-                    <TableCell>{booking.property}</TableCell>
-                    <TableCell>{formatDate(booking.checkIn)}</TableCell>
-                    <TableCell>{formatDate(booking.checkOut)}</TableCell>
-                    <TableCell>{getPlatformBadge(booking.platform)}</TableCell>
-                    <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                    <TableCell className="text-right">
-                      ${booking.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Message Guest
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Guest</TableHead>
+                  <TableHead>Property</TableHead>
+                  <TableHead>Check-in</TableHead>
+                  <TableHead>Check-out</TableHead>
+                  <TableHead>Platform</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredBookings.length > 0 ? (
+                  filteredBookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell className="font-medium">
+                        {booking.guestName}
+                      </TableCell>
+                      <TableCell>{booking.property}</TableCell>
+                      <TableCell>
+                        {formatBookingDate(booking.checkIn)}
+                      </TableCell>
+                      <TableCell>
+                        {formatBookingDate(booking.checkOut)}
+                      </TableCell>
+                      <TableCell>
+                        {getPlatformBadge(booking.platform)}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                      <TableCell className="text-right">
+                        ${booking.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <MessageSquare className="mr-2 h-4 w-4" />
+                              Message Guest
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="text-center py-6 text-gray-500"
+                    >
+                      No bookings found matching your filters.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="text-center py-6 text-gray-500"
-                  >
-                    No bookings found matching your filters.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
