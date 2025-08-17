@@ -5,16 +5,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Button } from "../ui/button";
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 import { DownloadIcon, LineChart, BarChart, PieChart } from "lucide-react";
 
 interface ChartProps {

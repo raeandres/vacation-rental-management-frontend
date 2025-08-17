@@ -21,6 +21,7 @@ import {
   DollarSign,
   BarChart3,
   Globe,
+  Settings,
   Menu,
 } from "lucide-react";
 import BookingTable from "./dashboard/BookingTable";
@@ -100,8 +101,8 @@ const Home = () => {
             setIsMobileMenuOpen(false);
           }}
         >
-          <Globe className="mr-2 h-4 w-4" />
-          Platforms
+          <Settings className="mr-2 h-4 w-4" />
+          Platform Settings
         </Button>
       </nav>
 
@@ -220,11 +221,11 @@ const Home = () => {
 
             {/* Tabs for different sections */}
             <Tabs defaultValue="bookings" className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-1 sm:grid-cols-4 mb-6">
                 <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
                 <TabsTrigger value="finances">Financial Summary</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="platforms">Platforms</TabsTrigger>
+                <TabsTrigger value="platforms">Platform Settings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="bookings" className="space-y-4">
@@ -272,9 +273,9 @@ const Home = () => {
               <TabsContent value="platforms" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Platform Integration</CardTitle>
+                    <CardTitle>Platform Settings</CardTitle>
                     <CardDescription>
-                      Manage your connected booking platforms
+                      Manage your connected booking platforms and listings
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -289,17 +290,7 @@ const Home = () => {
         {activeTab === "bookings" && (
           <div className="space-y-6">
             <h1 className="text-3xl font-bold">Booking Management</h1>
-            <Card>
-              <CardHeader>
-                <CardTitle>All Bookings</CardTitle>
-                <CardDescription>
-                  Comprehensive view of all your bookings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BookingTable />
-              </CardContent>
-            </Card>
+            <BookingTable />
           </div>
         )}
 
@@ -337,18 +328,8 @@ const Home = () => {
 
         {activeTab === "platforms" && (
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Platform Integration</h1>
-            <Card>
-              <CardHeader>
-                <CardTitle>Connected Platforms</CardTitle>
-                <CardDescription>
-                  Manage your booking platform connections
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PlatformIntegration />
-              </CardContent>
-            </Card>
+            <h1 className="text-3xl font-bold">Platform Settings</h1>
+            <PlatformIntegration />
           </div>
         )}
       </div>

@@ -9,14 +9,28 @@ import {
   Cloud,
 } from "lucide-react";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Button } from "../ui/button";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -25,21 +39,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import { Badge } from "../ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Separator } from "../ui/separator";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 
 interface Platform {
   id: string;
@@ -50,7 +62,19 @@ interface Platform {
   autoSync: boolean;
 }
 
+interface Listing {
+  id: string;
+  name: string;
+  platformId: string;
+  status: "Currently Hosting" | "Available";
+  guestName: string | null;
+  dateRange: string;
+  rate: number;
+  currency: string;
+}
+
 const PlatformIntegration = () => {
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([
     {
       id: "1",
@@ -93,6 +117,69 @@ const PlatformIntegration = () => {
     autoBackup: true,
     lastBackup: "2023-05-15T12:00:00",
   });
+
+  const [listings] = useState<Listing[]>([
+    {
+      id: "1",
+      name: "Cozy home in Eastwood",
+      platformId: "1",
+      status: "Currently Hosting",
+      guestName: "John Smith",
+      dateRange: "May 15 - May 20, 2023",
+      rate: 120,
+      currency: "USD",
+    },
+    {
+      id: "2",
+      name: "Muji home in Eastwood",
+      platformId: "1",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Jun 1, 2023",
+      rate: 95,
+      currency: "USD",
+    },
+    {
+      id: "3",
+      name: "Modern Apartment Downtown",
+      platformId: "2",
+      status: "Currently Hosting",
+      guestName: "Sarah Johnson",
+      dateRange: "May 10 - May 25, 2023",
+      rate: 150,
+      currency: "USD",
+    },
+    {
+      id: "4",
+      name: "Luxury Villa by the Beach",
+      platformId: "3",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Jul 15, 2023",
+      rate: 300,
+      currency: "USD",
+    },
+    {
+      id: "5",
+      name: "Studio in Arts District",
+      platformId: "4",
+      status: "Currently Hosting",
+      guestName: "Mike Chen",
+      dateRange: "May 8 - May 22, 2023",
+      rate: 80,
+      currency: "USD",
+    },
+    {
+      id: "6",
+      name: "Garden View Apartment",
+      platformId: "1",
+      status: "Available",
+      guestName: null,
+      dateRange: "Available until Aug 10, 2023",
+      rate: 110,
+      currency: "USD",
+    },
+  ]);
 
   const handleSync = () => {
     setSyncInProgress(true);
@@ -156,6 +243,29 @@ const PlatformIntegration = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getListingStatusColor = (status: string) => {
+    switch (status) {
+      case "Currently Hosting":
+        return "bg-blue-100 text-blue-800";
+      case "Available":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getFilteredListings = () => {
+    if (!selectedPlatform) return listings;
+    return listings.filter(
+      (listing) => listing.platformId === selectedPlatform,
+    );
+  };
+
+  const getSelectedPlatformName = () => {
+    const platform = platforms.find((p) => p.id === selectedPlatform);
+    return platform ? platform.name : "All Platforms";
   };
 
   return (
@@ -254,211 +364,217 @@ const PlatformIntegration = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="platforms">
-        <TabsList className="mb-4">
-          <TabsTrigger value="platforms">Connected Platforms</TabsTrigger>
-          <TabsTrigger value="cloud">Cloud Storage</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="platforms" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {platforms.map((platform) => (
-              <Card key={platform.id} className="overflow-hidden">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-md overflow-hidden">
-                        <img
-                          src={platform.logo}
-                          alt={`${platform.name} logo`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {platform.name}
-                        </CardTitle>
-                        <Badge
-                          variant="outline"
-                          className={getStatusColor(platform.status)}
-                        >
-                          {platform.status.charAt(0).toUpperCase() +
-                            platform.status.slice(1)}
-                        </Badge>
-                      </div>
+      <div className="space-y-6">
+        {/* Platform Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {platforms.map((platform) => (
+            <Card
+              key={platform.id}
+              className={`overflow-hidden cursor-pointer transition-all hover:shadow-md ${
+                selectedPlatform === platform.id ? "ring-2 ring-primary" : ""
+              }`}
+              onClick={() =>
+                setSelectedPlatform(
+                  selectedPlatform === platform.id ? null : platform.id,
+                )
+              }
+            >
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-md overflow-hidden">
+                      <img
+                        src={platform.logo}
+                        alt={`${platform.name} logo`}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <Settings size={16} />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="text-sm text-gray-500">
-                    <p>Last synced: {formatDate(platform.lastSync)}</p>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id={`auto-sync-${platform.id}`}
-                      checked={platform.autoSync}
-                      onCheckedChange={() => toggleAutoSync(platform.id)}
-                      disabled={platform.status !== "connected"}
-                    />
-                    <Label
-                      htmlFor={`auto-sync-${platform.id}`}
-                      className="text-sm"
-                    >
-                      Auto Sync
-                    </Label>
+                    <div>
+                      <CardTitle className="text-lg">{platform.name}</CardTitle>
+                      <Badge
+                        variant="outline"
+                        className={getStatusColor(platform.status)}
+                      >
+                        {platform.status.charAt(0).toUpperCase() +
+                          platform.status.slice(1)}
+                      </Badge>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    onClick={() => togglePlatformStatus(platform.id)}
-                    className="flex items-center gap-1"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                   >
-                    {platform.status === "connected" ? (
-                      <>
-                        <X size={14} />
-                        Disconnect
-                      </>
-                    ) : (
-                      <>
-                        <Check size={14} />
-                        Connect
-                      </>
-                    )}
+                    <Settings size={16} />
                   </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                </div>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="text-sm text-gray-500">
+                  <p>Last synced: {formatDate(platform.lastSync)}</p>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between pt-2">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id={`auto-sync-${platform.id}`}
+                    checked={platform.autoSync}
+                    onCheckedChange={(checked) => {
+                      toggleAutoSync(platform.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={platform.status !== "connected"}
+                  />
+                  <Label
+                    htmlFor={`auto-sync-${platform.id}`}
+                    className="text-sm"
+                  >
+                    Auto Sync
+                  </Label>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlatformStatus(platform.id);
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  {platform.status === "connected" ? (
+                    <>
+                      <X size={14} />
+                      Disconnect
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      Connect
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+
+        {platforms.some((p) => p.status === "error") && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertDescription className="text-red-800">
+              One or more platforms have connection errors. Please check your
+              API credentials and try reconnecting.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Listings Table */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">
+                {getSelectedPlatformName()} Listings
+              </h3>
+              <p className="text-muted-foreground">
+                {selectedPlatform
+                  ? `Showing listings for ${getSelectedPlatformName()}`
+                  : "Showing all listings across platforms"}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {selectedPlatform && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedPlatform(null)}
+                >
+                  Show All Platforms
+                </Button>
+              )}
+              <Button>
+                <Plus size={16} className="mr-2" />
+                Add Listing
+              </Button>
+            </div>
           </div>
 
-          {platforms.some((p) => p.status === "error") && (
-            <Alert className="mt-4 border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">
-                One or more platforms have connection errors. Please check your
-                API credentials and try reconnecting.
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-
-        <TabsContent value="cloud" className="space-y-4">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Cloud size={20} />
-                    Cloud Storage Configuration
-                  </CardTitle>
-                  <CardDescription>
-                    Configure cloud storage to access your data from any device
-                  </CardDescription>
-                </div>
-                <Switch
-                  checked={cloudStorage.enabled}
-                  onCheckedChange={() =>
-                    setCloudStorage({
-                      ...cloudStorage,
-                      enabled: !cloudStorage.enabled,
-                    })
-                  }
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="col-span-1">
-                    <Label>Storage Provider</Label>
-                  </div>
-                  <div className="col-span-3">
-                    <Select
-                      value={cloudStorage.provider}
-                      onValueChange={(value) =>
-                        setCloudStorage({ ...cloudStorage, provider: value })
-                      }
-                      disabled={!cloudStorage.enabled}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select provider" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="google-drive">
-                          Google Drive
-                        </SelectItem>
-                        <SelectItem value="dropbox">Dropbox</SelectItem>
-                        <SelectItem value="onedrive">OneDrive</SelectItem>
-                        <SelectItem value="icloud">iCloud</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="col-span-1">
-                    <Label>Auto Backup</Label>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={cloudStorage.autoBackup}
-                        onCheckedChange={() =>
-                          setCloudStorage({
-                            ...cloudStorage,
-                            autoBackup: !cloudStorage.autoBackup,
-                          })
-                        }
-                        disabled={!cloudStorage.enabled}
-                      />
-                      <Label>Enable automatic backup</Label>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Last backup: {formatDate(cloudStorage.lastBackup)}
-                    </p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="col-span-1">
-                    <Label>Sync Frequency</Label>
-                  </div>
-                  <div className="col-span-3">
-                    <Select
-                      defaultValue="daily"
-                      disabled={
-                        !cloudStorage.enabled || !cloudStorage.autoBackup
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <CardContent className="p-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Listing Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Guest Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Rate</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getFilteredListings().length > 0 ? (
+                      getFilteredListings().map((listing) => (
+                        <TableRow key={listing.id}>
+                          <TableCell className="font-medium">
+                            {listing.name}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={getListingStatusColor(listing.status)}
+                            >
+                              {listing.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{listing.guestName || "-"}</TableCell>
+                          <TableCell>{listing.dateRange}</TableCell>
+                          <TableCell className="text-right">
+                            {listing.currency} {listing.rate}/day
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Settings size={16} />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  Edit Listing
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  View Analytics
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Duplicate Listing
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600">
+                                  Delete Listing
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="text-center py-6 text-gray-500"
+                        >
+                          No listings found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline" disabled={!cloudStorage.enabled}>
-                Reset Configuration
-              </Button>
-              <Button disabled={!cloudStorage.enabled}>Save Changes</Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
